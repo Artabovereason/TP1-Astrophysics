@@ -11,6 +11,13 @@ with open('n4388_3.asc') as fobj:
         row = line.split()
         data.append(row)
 
+"""
+Definition of a Gaussian function
+"""
+
+def gaus(x,a,x0,sigma):
+    return a*np.exp(-(x-x0)**2/(2*sigma**2))
+
 spectrum_saved_without_noise_1 = [0 for i in range(256)]
 spectrum_saved_without_noise_2 = [0 for i in range(256)]
 spectrum_saved_without_noise_3 = [0 for i in range(256)]
@@ -173,6 +180,17 @@ value_integral_with_noise    = simps(true_mean_with_noise,velocity,dx=5.2)
 print('Area under the cleaned signal is : ',  end='')
 print(abs(value_integral_without_noise)*2)
 
+new_test = []
+new_without_noise = []
+for i in range(105,160):
+    new_test.append(velocity[i])
+    new_without_noise.append(true_mean_without_noise[i])
+
+polynomial_spectrum_double_gaussian = np.polyfit(new_test,new_without_noise,2)
+
+polyfit_fonctionne = []
+for i in range(len(new_test)):
+    polyfit_fonctionne.append(polynomial_spectrum_double_gaussian[2]+polynomial_spectrum_double_gaussian[1]*new_test[i]+polynomial_spectrum_double_gaussian[0]*new_test[i]*new_test[i])
 
 fig, axs = plt.subplots(2)
 fig.suptitle('Signal before and after noise treatment')
@@ -182,5 +200,9 @@ axs[0].legend(loc="upper right", prop={'size': 9})
 axs[1].set_xlabel('Velocity $km/s$')
 axs[1].set_ylabel('Intensity')
 axs[1].plot(velocity,true_mean_without_noise,color='blue',linewidth=1, label = "With treatment")
+axs[1].plot([velocity[i] for i in range(0,107)],[gaus(velocity[i],max(true_mean_without_noise),2670,22) for i in range(0,107)],'--',color='green') # right gaussian
+axs[1].plot([velocity[i] for i in range(160,255)],[gaus(velocity[i], 0.0145,2370,23) for i in range(160,255)],'--',color='green') # left gaussian
+#axs[1].plot(velocity,[gaus(velocity[i], 0.0145,2370,23)+gaus(velocity[i],max(true_mean_without_noise),2670,22) for i in range(len(velocity))],color='yellow') # left gaussian
+axs[1].plot(new_test, polyfit_fonctionne,'--', color='green', label='Fit')
 axs[1].legend(loc="upper right", prop={'size': 9})
 plt.savefig('final_figure.png', dpi=600)
